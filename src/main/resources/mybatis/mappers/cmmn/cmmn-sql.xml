@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.infoin.app.cmmn.mapper.CmmnMapper">
+
+	<!-- 발주처 목록 조회 -->
+	<select id="selectClientList" parameterType="com.infoin.app.common.vo.UserVo" resultType="com.infoin.app.cmmn.vo.ClientVo">
+		/* CmmnMapper.selectClientList */
+		SELECT CLIENT_ID
+				, BPLC_ID
+				, CLIENT_NM
+		  FROM TB_CLIENT_INFO TCI
+		 WHERE TCI.BPLC_ID = #{bplcId}
+	</select>
+
+	<!-- 제품타입 목록 조회 -->
+	<select id="selectPrdtList" parameterType="com.infoin.app.common.vo.UserVo" resultType="com.infoin.app.cmmn.vo.PrdtVo">
+		/* CmmnMapper.selectPrdtList */
+		SELECT CMMN_CD
+				, FCTRY_ID
+				, BPLC_ID
+				, CMMN_NM
+		  FROM TB_CMMN_INFO TCI
+		 WHERE CODE_SE = 'PRDT'
+		   AND TCI.FCTRY_ID = #{fctryId}
+		   AND TCI.BPLC_ID = #{bplcId}
+	</select>
+
+	<!-- 공통정보 목록 조회 -->
+	<select id="selectCmmnCdList" parameterType="com.infoin.app.cmmn.vo.CmmnCdListParamVo" resultType="com.infoin.app.cmmn.vo.CmmnCdListVo">
+		/* CmmnMapper.selectCmmnCdList */
+		SELECT CMMN_CD
+				, CMMN_NM
+				, ADD_1
+		  FROM TB_CMMN_INFO
+		 WHERE CODE_SE = #{codeSe}
+		   AND FCTRY_ID = #{fctryId}
+		   AND BPLC_ID = #{bplcId}
+		 ORDER BY CMMN_CD
+	</select>
+
+	<!-- 월유지비 1인당 초당단가 조회 -->
+	<select id="selectMonthSecAvgPrcInfo" parameterType="com.infoin.app.common.vo.UserVo" resultType="string">
+		/* CmmnMapper.selectMonthSecAvgPrcInfo */
+		SELECT CEIL(
+				CASE
+					WHEN BB.BPLC_ID IS NULL THEN 0
+					ELSE ROUND((((AA.M_OPER_EXPEN / BB.WORKER_CNT) / (AA.M_WORK_DAY_CNT * AA.STD_WORK_TM)) / 3600), 2)
+				END) AS PRC
+		FROM TB_BPLC_INFO AA
+		LEFT JOIN (
+			SELECT A.BPLC_ID
+					, COUNT(A.USER_ID) WORKER_CNT
+			  FROM TB_USER_ADD_INFO A
+			  INNER JOIN IFI_USER_INFO D
+			    ON A.USER_ID = D.USER_ID
+			   AND D.USER_STATUS = 'ST001'
+			  INNER JOIN IFI_USER_MNG_MAPNG B
+			    ON A.USER_ID = B.USER_ID
+			  INNER JOIN IFI_AUTHOR_USER_MAPNG_HIST C
+			    ON B.USER_CD = C.USER_CD
+			   AND C.USE_YN = 'Y'
+			   AND C.AUTHOR_ID = 'ROLE_USER'
+			  WHERE A.BPLC_ID = #{bplcId}
+			  GROUP BY A.BPLC_ID
+		) AS BB
+		  ON AA.BPLC_ID = BB.BPLC_ID
+		 WHERE 1=1
+		   AND AA.BPLC_ID = #{bplcId}
+	</select>
+
+</mapper>

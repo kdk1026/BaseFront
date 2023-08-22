@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.infoin.app.main.mapper.MainMapper">
+
+	<!-- 오늘의 작업지시서 목록 조회 -->
+	<select id="selectWorkOrderList" parameterType="com.infoin.app.common.vo.UserVo" resultType="com.infoin.app.main.vo.MainWorkOrderVo">
+		/* MainMapper.selectWorkOrderList */
+		SELECT TOI.OPERTDRCT_ID
+				, TOI.OPERT_DT
+				, TOI.OPERTSTD_ID
+				, TOI.OPERTSTD_PROCS_ID
+				, TOI.ORDER_ID
+				, TOI.CNNC_ID
+				, CONCAT(SUBSTR(TOI.BEGIN_TM, 1, 2), ':', SUBSTR(TOI.BEGIN_TM, 3, 2)) AS BEGIN_TM
+				, CONCAT(SUBSTR(TOI.END_TM, 1, 2), ':', SUBSTR(TOI.END_TM, 3, 2)) AS END_TM
+				, TOD.OPERTDRCT_DTL_ID
+				, TOD.ORDER_DTL_ID
+				, TOD.PRDUCT_ID
+				, TOD.DSGN_ID
+				, TOD.GOAL_QTY
+				, TOPI.PROCS_ORD_SN
+				, TOPI.OPERTSTD_PROCS_NM
+				, TOPI.MODE_SE
+				, TOPI.CT_CNT
+				, TOPI.ND_CNT
+				, TOPI.INTRVL
+				, TPI.PRDUCT_NM
+				, TPDI.DSGN_M_CODE
+				, TPDI.COLOR_ID
+				, TPDI.SIZE_ID
+				, TCIC.CMMN_NM AS COLOR_NM
+				, TCIS.CMMN_NM AS SIZE_NM
+				, TPII.IMG_ID
+				, ICF.FILE_LINK_PATH
+				, TEOM.OP_ID
+				, TOP.COMP_YN
+		  FROM TB_OPERTDRCT_INFO TOI
+		  INNER JOIN TB_OPERTDRCT_DETAIL TOD
+		    ON TOI.OPERTDRCT_ID = TOD.OPERTDRCT_ID
+		   AND TOI.OPERT_DT = TOD.OPERT_DT
+		  INNER JOIN TB_OPERTSTD_PROCS_INFO TOPI
+		    ON TOI.OPERTSTD_ID = TOPI.OPERTSTD_ID
+		   AND TOI.OPERTSTD_PROCS_ID = TOPI.OPERTSTD_PROCS_ID
+		  INNER JOIN TB_ORDER_DETAIL TORD
+		    ON TOD.ORDER_DTL_ID = TORD.ORDER_DTL_ID
+		   AND TOD.ORDER_ID = TORD.ORDER_ID
+		   AND TOD.PRDUCT_ID = TORD.PRDUCT_ID
+		   AND TOD.DSGN_ID = TORD.DSGN_ID
+		  INNER JOIN TB_ORDER_PRDUCT_MAPNG TOPM
+		    ON TORD.ORDER_ID = TOPM.ORDER_ID
+		   AND TORD.PRDUCT_ID = TOPM.PRDUCT_ID
+		  INNER JOIN TB_PRDUCT_INFO TPI
+		    ON TOPM.PRDUCT_ID = TPI.PRDUCT_ID
+		  INNER JOIN TB_PRDUCT_DSGN_INFO TPDI
+		    ON TPI.PRDUCT_ID = TPDI.PRDUCT_ID
+		   AND TORD.DSGN_ID = TPDI.DSGN_ID
+		  INNER JOIN TB_CMMN_INFO TCIC
+		    ON TPDI.COLOR_ID = TCIC.CMMN_CD
+		   AND TCIC.CODE_SE = 'COLR'
+		   AND TCIC.BPLC_ID = #{bplcId}
+           AND TCIC.FCTRY_ID = #{fctryId}
+		  INNER JOIN TB_CMMN_INFO TCIS
+		    ON TPDI.SIZE_ID = TCIS.CMMN_CD
+		   AND TCIS.CODE_SE = 'SIZE'
+		   AND TCIS.BPLC_ID = TCIC.BPLC_ID
+           AND TCIS.FCTRY_ID = TCIC.FCTRY_ID
+		  LEFT JOIN TB_PRDUCT_IMG_INFO TPII
+		    ON TPI.PRDUCT_ID = TPII.PRDUCT_ID
+		   AND TPII.IMG_ID = '1'
+		  LEFT JOIN IFI_CMMN_FILE ICF
+		    ON TPII.FILE_SN = ICF.FILE_SN
+		  INNER JOIN TB_EQPMN_OP_MAPNG TEOM
+		    ON TOI.CNNC_ID = TEOM.CNNC_ID
+		   AND TEOM.CNNC_YN = 'Y'
+		  INNER JOIN TB_OP_INFO TOI2
+		    ON TEOM.OP_ID = TOI2.OP_ID
+		  INNER JOIN TB_OPERTDRCT_PROC TOP
+		    ON TOD.OPERTDRCT_ID = TOP.OPERTDRCT_ID
+		   AND TOD.OPERT_DT = TOP.OPERT_DT
+		   AND TOD.OPERTDRCT_DTL_ID = TOP.OPERTDRCT_DTL_ID
+		   AND TOP.COMP_YN = 'N'
+		 WHERE TOI.OPERT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+		    AND TOI2.OP_ID = #{opId}
+		 ORDER BY TOI.BEGIN_TM ASC, TOI.OPERTDRCT_ID ASC, TOD.OPERTDRCT_DTL_ID ASC
+	</select>
+
+	<!-- 작업지시서 완료 처리 -->
+	<update id="updateWorkOrderCompProc" parameterType="com.infoin.app.main.vo.MainWorkOrderParamVo">
+		/* MainMapper.updateWorkOrderCompProc */
+		UPDATE TB_OPERTDRCT_PROC
+		  SET COMP_YN = 'Y'
+		  		, UPDT_CD = #{userCd}
+		  		, UPDT_DT = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		 WHERE OPERTDRCT_ID = #{opertdrctId}
+		   AND OPERT_DT = DATE_FORMAT(NOW(), '%Y%m%d')
+		   AND OPERTDRCT_DTL_ID = #{opertdrctDtlId}
+	</update>
+
+	<!-- 생산 데이터 등록 -->
+	<insert id="insertProductionData" parameterType="com.infoin.app.main.vo.ProductionDataVo">
+		/* MainMapper.insertProductionData */
+		<selectKey resultType="string" keyProperty="prodId" order="BEFORE">
+			SELECT IFNULL(MAX(PROD_ID), 0) + 1
+			  FROM TB_PRODUCTION
+			 WHERE OPERTDRCT_ID = #{opertdrctId}
+			   AND OPERT_DT = #{opertDt}
+			   AND OPERTDRCT_DTL_ID = #{opertdrctDtlId}
+			   AND OP_ID = #{opId}
+		</selectKey>
+		INSERT INTO TB_PRODUCTION (
+			PROD_ID
+			, OPERTDRCT_ID
+			, OPERT_DT
+			, OPERTSTD_ID
+			, OPERTDRCT_DTL_ID
+			, OP_ID
+			, OPERTSTD_PROCS_ID
+			, USER_ID
+			, PROD_QTY
+			, GOAL_QTY
+			, MODE_SE
+			, CT_CNT
+			, PROCS_CT_CNT
+			, ND_CNT
+			, PROCS_ND_CNT
+			, BOBBIN_CNT
+			, WORK_TM
+			, REGIST_CD
+			, REGIST_DT
+			, UPDT_CD
+			, UPDT_DT
+			, MOTOR_TM
+		) VALUES (
+			#{prodId}
+			, #{opertdrctId}
+			, #{opertDt}
+			, #{opertstdId}
+			, #{opertdrctDtlId}
+			, #{opId}
+			, #{opertstdProcsId}
+			, #{userId}
+			, #{prodQty}
+			, #{goalQty}
+			, #{modeSe}
+			, #{ctCnt}
+			, #{procsCtCnt}
+			, #{ndCnt}
+			, #{procsNdCnt}
+			, #{bobbinCnt}
+			, #{workTm}
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+			, #{motorTm}
+		)
+	</insert>
+
+	<!-- 생산 데이터 조회 -->
+	<select id="selectProductionData" parameterType="com.infoin.app.main.vo.ProductionDataVo" resultType="com.infoin.app.main.vo.ProductionResVo">
+		/* MainMapper.selectProductionData */
+		SELECT TP.OPERTDRCT_ID
+				, TP.OPERT_DT
+				, TP.OPERTDRCT_DTL_ID
+				, TP.OPERTSTD_ID
+				, TP.OPERTSTD_PROCS_ID
+				, TP.PROD_QTY
+				, TP.GOAL_QTY
+				, TP.MODE_SE
+				, TP.CT_CNT
+				, TP.PROCS_CT_CNT
+				, TP.ND_CNT
+				, TP.PROCS_ND_CNT
+				, TP.BOBBIN_CNT
+				, TP.WORK_TM
+				, CASE
+					WHEN TP.MODE_SE = '01' AND TP.PROD_QTY = TP.GOAL_QTY THEN 'N'
+					WHEN TP.MODE_SE = '02' AND TP.ND_CNT = TP.PROCS_ND_CNT THEN 'N'
+					ELSE 'Y'
+				  END AS IS_SAVE
+				, MOTOR_TM
+		  FROM TB_PRODUCTION TP
+		 WHERE PROD_ID = (
+		 	SELECT MAX(PROD_ID)
+		 	  FROM TB_PRODUCTION
+		 	 WHERE OPERTDRCT_ID = #{opertdrctId}
+		 	   AND OPERT_DT = #{opertDt}
+		 	   AND OPERTDRCT_DTL_ID = #{opertdrctDtlId}
+		 	   AND OP_ID = #{opId}
+		 	)
+		 	AND OPERTDRCT_ID = #{opertdrctId}
+		 	AND OPERT_DT = #{opertDt}
+		 	AND OPERTDRCT_DTL_ID = #{opertdrctDtlId}
+		 	AND OP_ID = #{opId}
+	</select>
+
+	<!-- 작업지시서 첨부 파일 목록 조회 (작업표준 첨부파일 정보 1 + 제품 N) -->
+	<select id="selectWorOrderAttch" parameterType="com.infoin.app.main.vo.WorkOrderAttchParamVo" resultType="com.infoin.app.main.vo.WorkOrderAttchVo">
+		/* MainMapper.selectWorOrderAttch */
+		SELECT B.FILE_ORG_NM
+				, B.FILE_ORG_EXT
+				, B.FILE_LINK_PATH
+		  FROM TB_OPERTSTD_PROCS_ATCHMNFL_INFO A
+		  INNER JOIN IFI_CMMN_FILE B
+		    ON A.FILE_SN = B.FILE_SN
+		 WHERE A.OPERTSTD_ID = #{opertstdId}
+		   AND A.OPERTSTD_PROCS_ID = #{opertstdProcsId}
+		UNION ALL
+		SELECT B.FILE_ORG_NM
+				, B.FILE_ORG_EXT
+				, B.FILE_LINK_PATH
+		  FROM TB_PRDUCT_IMG_INFO A
+		  INNER JOIN IFI_CMMN_FILE B
+		    ON A.FILE_SN = B.FILE_SN
+		 WHERE A.PRDUCT_ID = #{prductId}
+	</select>
+
+</mapper>

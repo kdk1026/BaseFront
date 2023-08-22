@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.infoin.app.board.mapper.BoardMapper">
+
+	<!-- 알림 목록 조회 -->
+	<select id="selectAlarmList" parameterType="com.infoin.app.board.vo.AlarmParamVo" resultType="com.infoin.app.board.vo.AlarmVo">
+		/* BoardMapper.selectAlarmList */
+		SELECT *
+  		  FROM (
+			SELECT TNI.NOTI_SN
+					, TNI.NOTI_TITLE
+					, TNI.NOTI_CN
+					, TNI.REGIST_DT AS REG_DT
+					, DATE_FORMAT(TNI.REGIST_DT, '%Y-%m-%d') AS REGIST_DT
+					, TNI.NOTI_TYPE
+					, TNI.READ_YN
+			  FROM TB_FCTRY_INFO TFI
+			  INNER JOIN TB_NOTI_INFO TNI
+			    ON TFI.FCTRY_ID = TNI.FCTRY_ID
+			   AND TFI.BPLC_ID = TNI.BPLC_ID
+			 WHERE TFI.FCTRY_ID = #{fctryId}
+			   AND TFI.BPLC_ID = #{bplcId}
+			   AND TNI.NOTI_TYPE = '1'
+			   AND TNI.USE_YN = 'Y'
+			UNION ALL
+			SELECT TNI.NOTI_SN
+					, TNI.NOTI_TITLE
+					, TNI.NOTI_CN
+					, TNI.REGIST_DT AS REG_DT
+					, DATE_FORMAT(TNI.REGIST_DT, '%Y-%m-%d') AS REGIST_DT
+					, TNI.NOTI_TYPE
+					, TNI.READ_YN
+			  FROM TB_FCTRY_INFO TFI
+			  INNER JOIN TB_NOTI_INFO TNI
+			    ON TFI.FCTRY_ID = TNI.FCTRY_ID
+			   AND TFI.BPLC_ID = TNI.BPLC_ID
+			 WHERE TFI.FCTRY_ID = #{fctryId}
+			   AND TFI.BPLC_ID = #{bplcId}
+			   AND TNI.NOTI_TYPE = '2'
+			   AND TNI.USER_ID = #{userId}
+			   AND TNI.USE_YN = 'Y'
+		  ) A
+		  ORDER BY REG_DT DESC
+	</select>
+
+	<!-- 자료실 목록 조회 -->
+	<select id="selectDataList" parameterType="com.infoin.app.common.vo.UserVo" resultType="com.infoin.app.board.vo.DataVo">
+		<![CDATA[
+		/* BoardMapper.selectDataList */
+		SELECT LPAD(ROW_NUMBER() OVER(), 2, '0') AS RNUM
+				, TDI.DCMT_SN
+				, TDI.DCMT_TITLE
+				, TDI.DCMT_CN
+				, DATE_FORMAT(TDI.REGIST_DT, '%Y-%m-%d') AS REGIST_DT
+				, TDIFM.FILE_SN
+				, ICF.FILE_SIZE
+				, CASE
+					WHEN ABS(ICF.FILE_SIZE) < 1024 THEN CONCAT( ROUND(ICF.FILE_SIZE, 2), ' B')
+					WHEN ABS(ICF.FILE_SIZE) < 1048576 THEN CONCAT( ROUND(ICF.FILE_SIZE/1024, 2), ' KB')
+					WHEN ABS(ICF.FILE_SIZE) < 1073741824 THEN CONCAT( ROUND(ICF.FILE_SIZE/1048576, 2), ' MB')
+				  END AS FILE_SIZE_NM
+				, ICF.FILE_ORG_EXT
+				, ICF.FILE_LINK_PATH
+		  FROM TB_FCTRY_INFO TFI
+		  INNER JOIN TB_DCMT_INFO TDI
+		    ON TFI.FCTRY_ID = TDI.FCTRY_ID
+		   AND TFI.BPLC_ID = TDI.BPLC_ID
+		   AND TDI.USE_YN = 'Y'
+		  INNER JOIN TB_DCMT_INFO_FILE_MAPNG TDIFM
+		    ON TDI.DCMT_SN = TDIFM.DCMT_SN
+		  INNER JOIN IFI_CMMN_FILE ICF
+		    ON TDIFM.FILE_SN = ICF.FILE_SN
+		 WHERE TFI.BPLC_ID = #{bplcId}
+		   AND TFI.FCTRY_ID = #{fctryId}
+		 ORDER BY TDI.REGIST_DT DESC
+		]]>
+	</select>
+
+	<!-- 개인 알림 조회 여부 수정 -->
+	<update id="updateAlarmReadYn" parameterType="com.infoin.app.board.vo.AlarmModifyParamVo">
+		/* BoardMapper.updateAlarmReadYn */
+		UPDATE TB_NOTI_INFO
+		  SET READ_YN = 'Y'
+		  		, UPDT_CD = #{userCd}
+		  		, UPDT_DT = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		 WHERE NOTI_SN = #{notiSn}
+		   AND READ_YN = 'N'
+	</update>
+
+	<!-- 파일 정보 조회 -->
+	<select id="selectFileInfo" parameterType="string" resultType="com.infoin.app.board.vo.FileParamVo">
+		/* BoardMapper.selectFileInfo */
+		SELECT REPLACE(ICF.FILE_LINK_PATH, ICF.FILE_NEW_NM, '') AS DEST_FILE_PATH
+				, ICF.FILE_ORG_NM
+				, ICF.FILE_NEW_NM
+				, ICF.FILE_SIZE
+		  FROM IFI_CMMN_FILE ICF
+		 WHERE ICF.FILE_SN = #{fileSn}
+	</select>
+
+</mapper>

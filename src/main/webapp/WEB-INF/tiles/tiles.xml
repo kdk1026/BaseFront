@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC  "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"  "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+	<!--  -->
+	<definition name="base-layout" template="/WEB-INF/tiles/layouts/baseLayout.jsp">
+		<put-attribute name="header" value="/WEB-INF/tiles/layouts/template/baseHeader.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/tiles/layouts/template/baseFooter.jsp" />
+	</definition>
+
+	<definition name="base::*" extends="base-layout">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="base::*/*" extends="base-layout">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="base::*/*/*" extends="base-layout">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	<!--  -->
+
+	<!--  -->
+	<definition name="no-layout" template="/WEB-INF/tiles/layouts/noLayout.jsp">
+		<put-attribute name="body" value="" />
+		<put-attribute name="footer" value="/WEB-INF/tiles/layouts/template/baseFooter.jsp" />
+	</definition>
+
+	<definition name="no::*" extends="no-layout">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}.jsp" />
+	</definition>
+	<definition name="no::*/*" extends="no-layout">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}.jsp" />
+	</definition>
+	<definition name="no::*/*/*" extends="no-layout">
+		<put-attribute name="body" value="/WEB-INF/jsp/{1}/{2}/{3}.jsp" />
+	</definition>
+	<!--  -->
+
+</tiles-definitions>

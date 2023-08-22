@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.infoin.app.standard.mapper.StandardMapper">
+
+	<!-- 작업표준 목록 조회 -->
+	<select id="selectStandardList" parameterType="com.infoin.app.standard.vo.StandardListParamVo" resultType="com.infoin.app.standard.vo.StandardListVo">
+		/* StandardMapper.selectStandardList */
+		SELECT TOI.OPERTSTD_ID
+				, TOI.OPERTSTD_NM
+				, TOI.PRDUCT_ID
+				, TPI.PRDUCT_NM
+				, TPI.PRDUCT_M_CODE
+				, TPII.IMG_ID
+				, ICF.FILE_LINK_PATH
+				, TBI.BRAND_ID
+				, TBI.BRAND_NM
+				, TCI.CLIENT_ID
+				, TCI.CLIENT_NM
+				, TOOM.ORDER_ID
+		  FROM TB_OPERTSTD_INFO TOI
+		  INNER JOIN TB_PRDUCT_INFO TPI
+		    ON TOI.PRDUCT_ID = TPI.PRDUCT_ID
+		  LEFT JOIN TB_PRDUCT_IMG_INFO TPII
+		    ON TPI.PRDUCT_ID = TPII.PRDUCT_ID
+		   AND TPII.IMG_ID = '1'
+		  LEFT JOIN IFI_CMMN_FILE ICF
+		    ON TPII.FILE_SN = ICF.FILE_SN
+		  INNER JOIN TB_BRAND_INFO TBI
+		    ON TPI.BRAND_ID = TBI.BRAND_ID
+		   AND TPI.BPLC_ID = TBI.BPLC_ID
+		  INNER JOIN TB_CLIENT_INFO TCI
+		    ON TBI.CLIENT_ID = TCI.CLIENT_ID
+		   AND TOI.BPLC_ID = TCI.BPLC_ID
+		  LEFT JOIN TB_OPERTSTD_ORDER_MAPNG TOOM
+		    ON TOI.OPERTSTD_ID = TOOM.OPERTSTD_ID
+		 WHERE TOI.FCTRY_ID = #{fctryId}
+		   AND TOI.BPLC_ID = #{bplcId}
+		   <if test="clientId != null and clientId != ''">
+				AND TCI.CLIENT_ID = #{clientId}
+		  	</if>
+		  	<if test="prductTy != null and prductTy != ''">
+		  		AND TPI.PRDUCT_TY = #{prductTy}
+		  	</if>
+	</select>
+
+	<!-- 작업표준 상세 조회 -->
+	<select id="selectStandardDetail" parameterType="com.infoin.app.standard.vo.StandardDetailParamVo" resultType="com.infoin.app.standard.vo.StandardDetailVo">
+		/* StandardMapper.selectStandardDetail */
+		SELECT TOI.OPERTSTD_ID
+				, TOI.OPERTSTD_NM
+				, TOI.RM
+				, TPI.PRDUCT_ID
+				, TPI.PRDUCT_NM
+				, TPI.PRDUCT_M_CODE
+				, TPI.PRDUCT_TY
+				, TBI.BRAND_ID
+				, TBI.BRAND_NM
+				, TCI.CLIENT_ID
+				, TCI.CLIENT_NM
+				, TCI2.CMMN_NM AS PRDUCT_TY_NM
+				, TOOM.ORDER_ID
+				, TOI2.ORDER_NM
+				, DATE_FORMAT(TOI2.LAST_DUE_REQUEST_DT, '%Y.%m.%d') AS LAST_DUE_REQUEST_DT
+				, DATE_FORMAT(TOI2.REGIST_DT, '%Y.%m.%d') AS REGIST_DT
+		  FROM TB_OPERTSTD_INFO TOI
+		  INNER JOIN TB_PRDUCT_INFO TPI
+		    ON TOI.PRDUCT_ID = TPI.PRDUCT_ID
+		  INNER JOIN TB_BRAND_INFO TBI
+		    ON TPI.BRAND_ID = TBI.BRAND_ID
+		  INNER JOIN TB_CLIENT_INFO TCI
+		    ON TBI.CLIENT_ID = TCI.CLIENT_ID
+		   AND TOI.BPLC_ID = TCI.BPLC_ID
+		  INNER JOIN TB_CMMN_INFO TCI2
+		    ON TCI2.CODE_SE = 'PRDT'
+		   AND TPI.PRDUCT_TY = TCI2.CMMN_CD
+		   AND TCI2.BPLC_ID = #{bplcId}
+		   AND TCI2.FCTRY_ID = #{fctryId}
+		  LEFT JOIN TB_OPERTSTD_ORDER_MAPNG TOOM
+		    ON TOI.OPERTSTD_ID = TOOM.OPERTSTD_ID
+		  LEFT JOIN TB_ORDER_INFO TOI2
+		    ON TOOM.ORDER_ID = TOI2.ORDER_ID
+		 WHERE TOI.OPERTSTD_ID = #{opertstdId}
+		   AND TPI.PRDUCT_ID = #{prductId}
+		   AND TCI.BPLC_ID = #{bplcId}
+		   <if test="orderId != null and orderId != ''">
+		   		AND TOOM.ORDER_ID = #{orderId}
+		   </if>
+	</select>
+
+	<!-- 작업표준 삭제 유효성 체크 -->
+	<select id="selectChkRemoveStandard" parameterType="string" resultType="com.infoin.app.standard.vo.StandardRemoveChkVo">
+		/* StandardMapper.selectChkRemoveStandard */
+		SELECT
+		  (SELECT COUNT(*) FROM TB_OPERTDRCT_INFO TOI WHERE TOI.OPERTSTD_ID = #{opertstdId}) AS TOI_CNT
+		  , (SELECT COUNT(*) FROM TB_OPERTSTD_ORDER_MAPNG TOOM WHERE TOOM.OPERTSTD_ID = #{opertstdId}) AS TOOM_CNT
+		  FROM DUAL
+	</select>
+
+	<!-- 작업표준 삭제 -->
+	<delete id="deleteStandard" parameterType="string">
+		/* StandardMapper.deleteStandard */
+		DELETE
+		  FROM TB_OPERTSTD_INFO
+		 WHERE OPERTSTD_ID = #{opertstdId}
+	</delete>
+
+	<!-- 작업표준 수정 -->
+	<update id="updateStandard" parameterType="com.infoin.app.standard.vo.StandardModifyVo">
+		/* StandardMapper.updateStandard */
+		UPDATE TB_OPERTSTD_INFO
+		  SET OPERTSTD_NM = #{opertstdNm}
+		  		, RM = #{memo}
+		  		, UPDT_CD = #{userCd}
+		  		, UPDT_DT = DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		  WHERE OPERTSTD_ID = #{opertstdId}
+	</update>
+
+	<!-- 제품 목록 조회 -->
+	<select id="selectProductList" parameterType="com.infoin.app.standard.vo.StandardListParamVo" resultType="com.infoin.app.standard.vo.ProductListVo">
+		/* StandardMapper.selectProductList */
+		SELECT TPI.PRDUCT_ID
+				, TPI.PRDUCT_NM
+				, TPI.PRDUCT_M_CODE
+				, TPII.IMG_ID
+				, ICF.FILE_LINK_PATH
+				, TBI.BRAND_ID
+				, TBI.BRAND_NM
+				, TCI.CLIENT_ID
+				, TCI.CLIENT_NM
+				, TOPM.ORDER_ID
+				, TOI.ORDER_NM
+		  FROM TB_PRDUCT_INFO TPI
+		  LEFT JOIN TB_PRDUCT_IMG_INFO TPII
+		    ON TPI.PRDUCT_ID = TPII.PRDUCT_ID
+		   AND TPII.IMG_ID = '1'
+		  LEFT JOIN IFI_CMMN_FILE ICF
+		    ON TPII.FILE_SN = ICF.FILE_SN
+		  INNER JOIN TB_BRAND_INFO TBI
+		    ON TPI.BRAND_ID = TBI.BRAND_ID
+		   AND TPI.BPLC_ID = TBI.BPLC_ID
+		  INNER JOIN TB_CLIENT_INFO TCI
+		    ON TBI.CLIENT_ID = TCI.CLIENT_ID
+		   AND TCI.BPLC_ID = TPI.BPLC_ID
+		  LEFT JOIN TB_ORDER_PRDUCT_MAPNG TOPM
+		    ON TPI.PRDUCT_ID = TOPM.PRDUCT_ID
+		  LEFT JOIN TB_ORDER_INFO TOI
+		    ON TOPM.ORDER_ID = TOI.ORDER_ID
+		 WHERE TPI.FCTRY_ID = #{fctryId}
+		   AND TPI.BPLC_ID = #{bplcId}
+		   <if test="clientId != null and clientId != ''">
+				AND TCI.CLIENT_ID = #{clientId}
+		  	</if>
+		  	<if test="prductTy != null and prductTy != ''">
+		  		AND TPI.PRDUCT_TY = #{prductTy}
+		  	</if>
+	</select>
+
+	<!-- 작업표준 만들기 상세 조회 -->
+	<select id="selectMakeStandardDetail" parameterType="com.infoin.app.standard.vo.StandardDetailParamVo" resultType="com.infoin.app.standard.vo.StandardDetailVo">
+		/* StandardMapper.selectMakeStandardDetail */
+		SELECT TPI.PRDUCT_ID
+				, TPI.PRDUCT_NM
+				, TPI.PRDUCT_M_CODE
+				, TPI.PRDUCT_TY
+				, TBI.BRAND_ID
+				, TBI.BRAND_NM
+				, TCI.CLIENT_ID
+				, TCI.CLIENT_NM
+				, TCI2.CMMN_NM AS PRDUCT_TY_NM
+				, TOPM.ORDER_ID
+				, TOI.ORDER_NM
+				, DATE_FORMAT(TOI.LAST_DUE_REQUEST_DT, '%Y.%m.%d') AS LAST_DUE_REQUEST_DT
+				, DATE_FORMAT(TOI.REGIST_DT, '%Y.%m.%d') AS REGIST_DT
+				, TOI2.OPERTSTD_ID
+				, TOI2.OPERTSTD_NM
+				, TOI2.RM
+		  FROM TB_PRDUCT_INFO TPI
+		  LEFT JOIN TB_PRDUCT_IMG_INFO TPII
+		    ON TPI.PRDUCT_ID = TPII.PRDUCT_ID
+		   AND TPII.IMG_ID = '1'
+		  LEFT JOIN IFI_CMMN_FILE ICF
+		    ON TPII.FILE_SN = ICF.FILE_SN
+		  INNER JOIN TB_BRAND_INFO TBI
+		    ON TPI.BRAND_ID = TBI.BRAND_ID
+		  INNER JOIN TB_CLIENT_INFO TCI
+		    ON TBI.CLIENT_ID = TCI.CLIENT_ID
+		  LEFT JOIN TB_ORDER_PRDUCT_MAPNG TOPM
+		    ON TPI.PRDUCT_ID = TOPM.PRDUCT_ID
+		  INNER JOIN TB_CMMN_INFO TCI2
+		    ON TCI2.CODE_SE = 'PRDT'
+		   AND TPI.PRDUCT_TY = TCI2.CMMN_CD
+		   AND TCI2.BPLC_ID = #{bplcId}
+		   AND TCI2.FCTRY_ID = #{fctryId}
+		  LEFT JOIN TB_ORDER_INFO TOI
+		    ON TOPM.ORDER_ID = TOI.ORDER_ID
+		  LEFT JOIN TB_OPERTSTD_INFO TOI2
+		    ON TOPM.ORDER_ID = TOI2.OPERTSTD_ID
+		 WHERE TPI.PRDUCT_ID = #{prductId}
+		   AND TCI.BPLC_ID = #{bplcId}
+		 	<if test="orderId != null and orderId != ''">
+			   AND TOPM.ORDER_ID = #{orderId}
+		 	</if>
+	</select>
+
+	<!-- 작업표준 등록 -->
+	<insert id="insertOpertstd" parameterType="com.infoin.app.standard.vo.OpertstdVo">
+		/* StandardMapper.insertOpertstd */
+		<selectKey resultType="string" keyProperty="opertstdId" order="BEFORE">
+			SELECT IFNULL(MAX(OPERTSTD_ID), 0) + 1
+			  FROM TB_OPERTSTD_INFO
+		</selectKey>
+		INSERT INTO TB_OPERTSTD_INFO (
+			OPERTSTD_ID
+			, FCTRY_ID
+			, BPLC_ID
+			, OPERTSTD_NM
+			, PRDUCT_ID
+			, RM
+			, REGIST_CD
+			, REGIST_DT
+			, UPDT_CD
+			, UPDT_DT
+		) VALUES (
+			#{opertstdId}
+			, #{fctryId}
+			, #{bplcId}
+			, #{opertstdNm}
+			, #{prductId}
+			, #{rm}
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		)
+	</insert>
+
+	<!-- 작업표준 공정 정보 등록 -->
+	<insert id="insertOpertstdProcs" parameterType="com.infoin.app.standard.vo.OpertstdProcsVO">
+		/* StandardMapper.insertOpertstdProcs */
+		<selectKey resultType="string" keyProperty="opertstdProcsId" order="BEFORE">
+		SELECT IFNULL(MAX(OPERTSTD_PROCS_ID), 0) + 1
+		  FROM TB_OPERTSTD_PROCS_INFO
+		 WHERE OPERTSTD_ID = #{opertstdId}
+		</selectKey>
+		INSERT INTO TB_OPERTSTD_PROCS_INFO (
+			OPERTSTD_ID
+			, OPERTSTD_PROCS_ID
+			, OPERTSTD_PROCS_NM
+			, PROCS_ID
+			, PROCS_ORD_SN
+			, MODE_SE
+			, CT_CNT
+			, ND_CNT
+			, MOT_WK_TM
+			, INTRVL
+			, DFFLY
+			, EQPMN_CD
+			, STD_TM
+			, STD_PROCS_TM
+			, STD_PROCS_RATE
+			, PROCS_PRC
+			, REGIST_CD
+			, REGIST_DT
+			, UPDT_CD
+			, UPDT_DT
+		) VALUES (
+			#{opertstdId}
+			, #{opertstdProcsId}
+			, #{opertstdProcsNm}
+			, #{procsId}
+			, #{procsOrdSn}
+			, #{modeSe}
+			, #{ctCnt}
+			, #{ndCnt}
+			, #{motWkTm}
+			, #{intrvl}
+			, #{dffly}
+			, #{eqpmnCd}
+			, #{stdTm}
+			, #{stdProcsTm}
+			, #{stdProcsRate}
+			, #{procsPrc}
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		)
+	</insert>
+
+	<!-- 작업표준 수주 매핑 등록 -->
+	<insert id="insertOpertstdOrderMapng" parameterType="com.infoin.app.standard.vo.OpertstdVo">
+		/* StandardMapper.insertOpertstdOrderMapng */
+		INSERT INTO TB_OPERTSTD_ORDER_MAPNG (
+			OPERTSTD_ID
+			, ORDER_ID
+			, REGIST_CD
+			, REGIST_DT
+			, UPDT_CD
+			, UPDT_DT
+		) VALUES (
+			#{opertstdId}
+			, #{orderId}
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+			, #{userCd}
+			, DATE_FORMAT(NOW(), '%Y%m%d%H%i%s')
+		)
+	</insert>
+
+	<!-- 공정별 표준 비율 데이터 조회 -->
+	<select id="selectProcGraphData" parameterType="com.infoin.app.standard.vo.ProcGraphDataParamVo" resultType="com.infoin.app.standard.vo.ProcsGraphVo">
+		/* StandardMapper.selectProcGraphData */
+		SELECT TOPI.OPERTSTD_PROCS_ID
+				, TOPI.OPERTSTD_PROCS_NM
+				, TOPI.PROCS_ID
+				, TOPI.EQPMN_CD
+				, TCI2.CMMN_NM AS EQPMN_NM
+				, TOPI.STD_TM
+		  FROM TB_OPERTSTD_PROCS_INFO TOPI
+		  INNER JOIN TB_CMMN_INFO TCI2
+		    ON TCI2.CODE_SE = 'EQPM'
+		   AND TOPI.EQPMN_CD = TCI2.CMMN_CD
+		   AND TCI2.BPLC_ID = #{bplcId}
+		   AND TCI2.FCTRY_ID = #{fctryId}
+		 WHERE TOPI.OPERTSTD_ID = #{opertstdId}
+	</select>
+
+	<!-- 작업표준 공정 목록 조회 -->
+	<select id="selectStandardProc" parameterType="com.infoin.app.standard.vo.StandardDetailParamVo" resultType="com.infoin.app.standard.vo.StandardProcListVo">
+		/* StandardMapper.selectStandardProc */
+		SELECT TOPI.PROCS_ORD_SN
+				, TOPI.OPERTSTD_ID
+				, TOPI.OPERTSTD_PROCS_ID
+				, TOPI.OPERTSTD_PROCS_NM
+				, TOPI.PROCS_ID
+				, TOPI.EQPMN_CD
+				, TCI2.CMMN_NM AS EQPMN_NM
+				, TCI2.ADD_1
+				, TOPI.MODE_SE
+				, CASE
+					WHEN TOPI.MODE_SE = '01' THEN TOPI.CT_CNT
+					ELSE TOPI.ND_CNT
+				  END AS CT_ND_CNT
+				, TOPI.STD_TM
+				, TOPI.INTRVL
+				, TOPI.DFFLY
+				, TOPI.STD_PROCS_TM
+				, TOPI.STD_PROCS_RATE
+				, TOPI.PROCS_PRC
+		  FROM TB_OPERTSTD_INFO TOI
+		  INNER JOIN TB_OPERTSTD_PROCS_INFO TOPI
+		    ON TOI.OPERTSTD_ID = TOPI.OPERTSTD_ID
+		  INNER JOIN TB_CMMN_INFO TCI2
+		    ON TCI2.CODE_SE = 'EQPM'
+		   AND TOPI.EQPMN_CD = TCI2.CMMN_CD
+		   AND TCI2.BPLC_ID = #{bplcId}
+		   AND TCI2.FCTRY_ID = #{fctryId}
+		 WHERE TOI.OPERTSTD_ID = #{opertstdId}
+		   AND TOI.PRDUCT_ID = #{prductId}
+		 ORDER BY TOPI.PROCS_ORD_SN
+	</select>
+
+	<!-- 작업표준 공정 정보 삭제 -->
+	<delete id="deleteOpertstdProcs" parameterType="string">
+		/* StandardMapper.deleteOpertstdProcs */
+		DELETE
+		  FROM TB_OPERTSTD_PROCS_INFO
+		 WHERE OPERTSTD_ID = #{opertstdId}
+	</delete>
+
+</mapper>

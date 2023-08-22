@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.infoin.app.init.mapper.InitMapper">
+
+	<!-- 사업장 목록 조회 -->
+	<select id="selectBplcInfoList" resultType="com.infoin.app.init.vo.InitBplcInfoVo">
+		/* InitMapper.selectBplcInfoList */
+		SELECT BPLC_ID
+				, BPLC_NM
+		  FROM TB_BPLC_INFO
+		 WHERE USE_YN = 'Y'
+	</select>
+
+	<!-- 공장 목록 조회 -->
+	<select id="selectFctryInfoList" parameterType="string" resultType="com.infoin.app.init.vo.InitFctryInfoVo">
+		/* InitMapper.selectFctryInfoList */
+		SELECT BPLC_ID
+				, FCTRY_ID
+				, FCTRY_NM
+		  FROM TB_FCTRY_INFO
+		 WHERE USE_YN = 'Y'
+		   AND BPLC_ID = #{bplcId}
+	</select>
+
+	<!-- OP번호 목록 조회 -->
+	<select id="selectOpInfoList" parameterType="com.infoin.app.init.vo.OpParamVo" resultType="com.infoin.app.init.vo.OpVo">
+		/* InitMapper.selectOpInfoList */
+		SELECT TOI.OP_ID
+				, CONCAT('P', TOI.MODEL_ID) AS OP_NM
+		  FROM TB_OP_INFO TOI
+		  INNER JOIN TB_SUB_OP_MAPNG TSOM
+		    ON TOI.OP_ID = TSOM.OP_ID
+		 WHERE TOI.USE_YN = 'Y'
+		   AND TSOM.BPLC_ID = #{bplcId}
+		   AND TSOM.FCTRY_ID = #{fctryId}
+	</select>
+
+</mapper>
