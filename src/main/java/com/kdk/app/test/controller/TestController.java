@@ -92,4 +92,12 @@ public class TestController {
 		return mav;
 	}
 
+	@GetMapping("/i18n")
+	public ModelAndView i18n() {
+		ModelAndView mav = new ModelAndView();
+
+		mav.setViewName("test/i18n");
+		return mav;
+	}
+
 }
