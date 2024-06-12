@@ -24,6 +24,7 @@ public class SiteMeshConfig extends ConfigurableSiteMeshFilter {
 		.addExcludedPath("/index.jsp")
 		.addExcludedPath("/test/login")
 		.addExcludedPath("/test/main")
+		.addExcludedPath("/test/i18n")
 		.setMimeTypes("text/html");
 	}
 
