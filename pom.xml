@@ -93,6 +93,13 @@
 		    <artifactId>sitemesh</artifactId>
 		    <version>3.2.1</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/dev.akkinoc.util/yaml-resource-bundle -->
+		<dependency>
+		    <groupId>dev.akkinoc.util</groupId>
+		    <artifactId>yaml-resource-bundle</artifactId>
+		    <version>2.12.3</version>
+		</dependency>
 	</dependencies>
 
 	<build>
