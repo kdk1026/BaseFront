@@ -31,6 +31,7 @@ public class ContainerConfig {
         ajpConnector.setSecure(false);
         ajpConnector.setAllowTrace(false);
         ajpConnector.setScheme("http");
+        ajpConnector.setProperty("address", "0.0.0.0");
         ((AbstractAjpProtocol<?>)ajpConnector.getProtocolHandler()).setSecretRequired(false);
         return ajpConnector;
 	}
