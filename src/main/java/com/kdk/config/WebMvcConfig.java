@@ -58,7 +58,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		registry.addInterceptor( new SessionInterceptor() )
 			.addPathPatterns("/**")
 			.excludePathPatterns("/",
-					"/test/layoutBase", "/test/layoutBase2", "/test/login", "/test/loginProc", "/test/i18n",
+					"/test/layoutBase", "/test/layoutBase2", "/test/login", "/test/loginProc", "/test/i18n", "/test/get-media",
 					"/js/**", "/css/**");
 	}
 
