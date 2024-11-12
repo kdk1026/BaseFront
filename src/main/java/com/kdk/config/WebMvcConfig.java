@@ -56,7 +56,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		registry.addInterceptor( this.localeChangeInterceptor() );
 
 		registry.addInterceptor( new SessionInterceptor() )
-			.addPathPatterns("/**")
+//			.addPathPatterns("/**")
+			.addPathPatterns("/test/main")
 			.excludePathPatterns("/",
 					"/test/layoutBase", "/test/layoutBase2", "/test/login", "/test/loginProc", "/test/i18n", "/test/get-media",
 					"/js/**", "/css/**");
