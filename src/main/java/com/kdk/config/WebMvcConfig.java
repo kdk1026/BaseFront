@@ -1,11 +1,13 @@
 package com.kdk.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
@@ -31,6 +33,9 @@ import com.kdk.config.mvc.MessageConfig;
 	MessageConfig.class
 })
 public class WebMvcConfig implements WebMvcConfigurer {
+
+	@Value("${upload.folder}")
+	private String uploadFolder;
 
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
@@ -60,7 +65,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
 			.addPathPatterns("/test/main")
 			.excludePathPatterns("/",
 					"/test/layoutBase", "/test/layoutBase2", "/test/login", "/test/loginProc", "/test/i18n", "/test/get-media",
-					"/js/**", "/css/**");
+					"/js/**", "/css/**", "/upload/**");
+	}
+
+	@Override
+	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+		registry
+			.addResourceHandler("/upload/**")
+			.addResourceLocations(uploadFolder);
 	}
 
 }

@@ -1,5 +1,4 @@
-[19:47:25:36][restartedMain][INFO ][BaseFrontApplication:logStarting:50] - Starting BaseFrontApplication using Java 21.0.3 with PID 8732 (D:\_Dev\Java\workspace_sts\BaseFront\target\classes started by 김대광 in D:\_Dev\Java\workspace_sts\BaseFront)
-[19:47:25:37][restartedMain][DEBUG][BaseFrontApplication:logStarting:51] - Running with Spring Boot v3.3.0, Spring v6.1.8
-[19:47:25:37][restartedMain][INFO ][BaseFrontApplication:logStartupProfileInfo:660] - The following 1 profile is active: "local"
-[19:47:28:77][restartedMain][INFO ][BaseFrontApplication:logStarted:56] - Started BaseFrontApplication in 3.952 seconds (process running for 4.815)
-[19:47:40:24][http-nio-8080-exec-10][DEBUG][SessionInterceptor:preHandle:42] - org.apache.catalina.session.StandardSessionFacade@425fe682
+[20:36:32:03][restartedMain][INFO ][BaseFrontApplication:logStarting:50] - Starting BaseFrontApplication using Java 21.0.3 with PID 3800 (D:\_Dev\Java\workspace_sts\BaseFront\target\classes started by 김대광 in D:\_Dev\Java\workspace_sts\BaseFront)
+[20:36:32:04][restartedMain][DEBUG][BaseFrontApplication:logStarting:51] - Running with Spring Boot v3.3.0, Spring v6.1.8
+[20:36:32:06][restartedMain][INFO ][BaseFrontApplication:logStartupProfileInfo:660] - The following 1 profile is active: "local"
+[20:36:35:46][restartedMain][INFO ][BaseFrontApplication:logStarted:56] - Started BaseFrontApplication in 3.946 seconds (process running for 4.748)
