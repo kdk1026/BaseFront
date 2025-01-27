@@ -48,7 +48,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Error</h1>
+        <h1>서버에 문제가 발생했습니다.</h1>
         <p>${message}</p>
         <div class="button-container">
             <a href="javascript:history.back()">뒤로가기</a>
