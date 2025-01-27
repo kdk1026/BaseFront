@@ -1,7 +1,7 @@
 /**
  * @author 김대광 <daekwang1026&#64;gmail.com>
  * @since 2018.12.02
- * @version 5.9
+ * @version 6.1
  * @description 특정 프로젝트가 아닌, 범용적으로 사용하기 위한 함수 모음
  * @description 버전업 기준 : 수정 / 함수 추가 -> 프로젝트 적용 여부
  * @description 파일명을 common-util.js 로 변경해서 사용
@@ -21,6 +21,7 @@
  * @property {object} CommonJS.Escape
  * @property {object} CommonJS.BrowserInfo
  * @property {object} CommonJS.Input - 2021.06.21 추가
+ * @property {object} CommonJS.FormatValue - 2024.11.21 추가
  * @property {object} CommonJS.SearchEngine - 2021.07.10 추가
  * @property {object} CommonJS.SnsShare - 2021.07.10 추가
  * @property {object} CommonJS.Mobile - 2021.07.10 추가
@@ -422,7 +423,7 @@ CommonJS.Valid = {
      * CommonJS.Valid.isSpecial(val);
      */
     isSpecial: function (val) {
-        var _re = /[`~!@#$%^&*()-_=+{}|;:'\",.<>?]+$/;
+        var _re = /[`~!@#$%^&*()\-_=+{}|;:'",.<>/?[\]]+$/;
         return _re.test(val);
     },
     /**
@@ -447,7 +448,7 @@ CommonJS.Valid = {
      * CommonJS.Valid.isNotHangul(val);
      */
     isNotHangul: function (val) {
-        var _re = /[a-zA-Z0-9]|[ \[\]{}()<>?|`~!@#$%^&*-_+=,.;:\"'\\]/g;
+        var _re = /[a-zA-Z0-9]|[ [\]{}()<>/?|`~!@#$%^&*-_+=,.;:"'\\]/g;
         return _re.test(val);
     },
     /**
@@ -477,7 +478,7 @@ CommonJS.Valid = {
  * CommonJS.DateTime.함수 대신 Moment.js 적극 권장
  *
  * @link https://momentjs.com/
- * @link https://github.com/kdk1026/node_utils/blob/main/libs/date.js
+ * @link https://github.com/kdk1026/vite-util/blob/master/src/utils/date.js
  * ********************************************************************
  */
 CommonJS.DateTime = {
@@ -766,10 +767,10 @@ CommonJS.FormatValid = {
             041-충남, 042-대전, 043-충복, 044-세종
             051-부산, 052-울산, 053-대구, 054-경북, 055-경남
             061-전남, 062-광주, 063-전북, 064-제주
-            0505-평생번호/인터넷 팩스 번호, 0507-안심번호
             070-인터넷 전화
+            0502~0507-가상 전화번호
         */
-        var _re = /^(0(2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|505|507|70))-?(\d{3,4})-?(\d{4})$/;
+        var _re = /^(0(2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|70|502|503|504|505|506|507))-?(\d{3,4})-?(\d{4})$/;
         return _re.test(_val);
     },
     /**
@@ -838,7 +839,7 @@ CommonJS.FormatValid = {
      * CommonJS.FormatValid.isUrl(val);
      */
     isUrl: function (val) {
-        var _re = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+        var _re = _re = /^(https?:\/\/)([\w-]+(\.[\w-]+)+)(:\d+)?(\/\S*)?$/;
         return _re.test(val);
     },
     /**
@@ -1633,10 +1634,10 @@ CommonJS.Byte = {
     /**
      * input text/textarea의 Byte를 체크하여 nowByteEle에 표시
      * input text/textarea의 Byte를 체크하여 maxByte 초과하면 자르기
-     * @param {Element - this} obj 
-     * @param {number} maxByte 
-     * @param {Element} nowByteEle 
-     * @param {boolean} isEucKr 
+     * @param {Element - this} obj
+     * @param {number} maxByte
+     * @param {Element} nowByteEle
+     * @param {boolean} isEucKr
      * @example
      * <input type="text" id="temp" />
      * <span id="nowByte">0</span>/100bytes
@@ -1803,13 +1804,13 @@ CommonJS.BrowserInfo = {
      * CommonJS.BrowserInfo.isMobile();
      */
     isMobile: function () {
-        var _filter = 'win16|win32|win64|mac';
-        if (navigator.platform) {
-            if (_filter.indexOf(navigator.platform.toLowerCase()) < 0) {
-                return true;
-            } else {
-                return false;
-            }
+        var _filter = 'windows|macos|win16|win32|win64|macintel';
+        var _platform = navigator.userAgentData?.platform || navigator?.platform;
+
+        if( _filter.indexOf(_platform.toLowerCase()) < 0 ) {
+            return true;
+        } else {
+            return false;
         }
     },
     /**
@@ -1892,17 +1893,14 @@ CommonJS.Input = {
     /**
      * 숫자만 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyNum( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyNum( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyNum( $(셀렉터) );
-     * CommonJS.Input.onlyNum( null, 셀렉터 );
      */
-    onlyNum: function (inputElement, inputElementStr) {
+    onlyNum: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -1913,34 +1911,19 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^0-9]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^0-9]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^0-9]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 숫자만 입력 + 세 자리마다 콤마 자동 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyFormatNum( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyFormatNum( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyFormatNum( $(셀렉터) );
-     * CommonJS.Input.onlyFormatNum( null, 셀렉터 );
      */
-    onlyFormatNum: function (inputElement, inputElementStr) {
+    onlyFormatNum: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -1948,18 +1931,6 @@ CommonJS.Input = {
                 });
             } else {
                 inputElement.keyup(function(e) {
-                    $(this).val( fnTemp(e) );
-                });
-            }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = fnTemp(e);
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
                     $(this).val( fnTemp(e) );
                 });
             }
@@ -1979,17 +1950,14 @@ CommonJS.Input = {
     /**
      * 영문만 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyEng( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyEng( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyEng( $(셀렉터) );
-     * CommonJS.Input.onlyEng( null, 셀렉터 );
      */
-    onlyEng: function (inputElement, inputElementStr) {
+    onlyEng: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2000,34 +1968,19 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^a-zA-Z]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^a-zA-Z]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^a-zA-Z]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 영문 + '_' 만 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyEngUnder( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyEngUnder( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyEngUnder( $(셀렉터) );
-     * CommonJS.Input.onlyEngUnder( null, 셀렉터 );
      */
-    onlyEngUnder: function (inputElement, inputElementStr) {
+    onlyEngUnder: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2038,34 +1991,19 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^a-zA-Z_]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^a-zA-Z_]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^a-zA-Z_]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 영문 + 숫자만 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyEngNum( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyEngNum( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyEngNum( $(셀렉터) );
-     * CommonJS.Input.onlyEngNum( null, 셀렉터 );
      */
-    onlyEngNum: function (inputElement, inputElementStr) {
+    onlyEngNum: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2076,34 +2014,19 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^a-zA-Z0-9]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^a-zA-Z0-9]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^a-zA-Z0-9]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 영문 + SPACE 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyEngBlank( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyEngBlank( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyEngBlank( $(셀렉터) );
-     * CommonJS.Input.onlyEngBlank( null, 셀렉터 );
      */
-    onlyEngBlank: function (inputElement, inputElementStr) {
+    onlyEngBlank: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2114,16 +2037,27 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^a-zA-Z\s]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^a-zA-Z\s]/gi, '');
-                    }
+        }
+    },
+    /**
+     * 영문 + 숫자 + SPACE 입력
+     * @param {Element} inputElement
+     * @example
+     * [JavaScript]
+     * CommonJS.Input.onlyEngNumBlank( document.querySelector(셀렉터) );
+     *
+     * [jQuery]
+     * CommonJS.Input.onlyEngNumBlank( $(셀렉터) );
+     */
+    onlyEngNumBlank: function (inputElement) {
+        if (inputElement !== null) {
+            if (inputElement.length === undefined) {
+                inputElement.addEventListener('keyup', function (e) {
+                    this.value = e.target.value.replace(/[^a-zA-Z0-9\s]/gi, '');
                 });
             } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^a-zA-Z\s]/gi, ''));
+                inputElement.keyup(function(e) {
+                    $(this).val(e.target.value.replace(/[^a-zA-Z0-9\s]/gi, ''));
                 });
             }
         }
@@ -2131,17 +2065,14 @@ CommonJS.Input = {
     /**
      * 한글만 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyHangul( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyHangul( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyHangul( $(셀렉터) );
-     * CommonJS.Input.onlyHangul( null, 셀렉터 );
      */
-    onlyHangul: function (inputElement, inputElementStr) {
+    onlyHangul: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2152,34 +2083,19 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 한글 + SPACE 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyHangulBlank( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyHangulBlank( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyHangulBlank( $(셀렉터) );
-     * CommonJS.Input.onlyHangulBlank( null, 셀렉터 );
      */
-    onlyHangulBlank: function (inputElement, inputElementStr) {
+    onlyHangulBlank: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2190,34 +2106,42 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ\s]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ\s]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ\s]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 한글 + 영문 + 숫자 입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.onlyHanEngNum( document.querySelector(셀렉터) );
-     * CommonJS.Input.onlyHanEngNum( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.onlyHanEngNum( $(셀렉터) );
-     * CommonJS.Input.onlyHanEngNum( null, 셀렉터 );
      */
-    onlyHanEngNum: function (inputElement, inputElementStr) {
+    onlyHanEngNum: function (inputElement) {
+        if (inputElement !== null) {
+            if (inputElement.length === undefined) {
+                inputElement.addEventListener('keyup', function (e) {
+                    this.value = e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/gi, '');
+                });
+            } else {
+                inputElement.keyup(function(e) {
+                    $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9]/gi, ''));
+                });
+            }
+        }
+    },
+    /**
+     * 한글 + 영문 + 숫자 + SPACE 입력
+     * @param {Element} inputElement
+     * @example
+     * [JavaScript]
+     * CommonJS.Input.onlyHanEngNumBlank( document.querySelector(셀렉터) );
+     *
+     * [jQuery]
+     * CommonJS.Input.onlyHanEngNumBlank( $(셀렉터) );
+     */
+    onlyHanEngNumBlank: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2228,34 +2152,19 @@ CommonJS.Input = {
                     $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\s]/gi, ''));
                 });
             }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\s]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
-                    $(this).val(e.target.value.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\s]/gi, ''));
-                });
-            }
         }
     },
     /**
      * 한글 입력 막기
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
      * CommonJS.Input.blockingHangul( document.querySelector(셀렉터) );
-     * CommonJS.Input.blockingHangul( null, 아이디_셀렉터 );
      *
      * [jQuery]
      * CommonJS.Input.blockingHangul( $(셀렉터) );
-     * CommonJS.Input.blockingHangul( null, 셀렉터 );
      */
-    blockingHangul: function (inputElement, inputElementStr) {
+    blockingHangul: function (inputElement) {
         if (inputElement !== null) {
             if (inputElement.length === undefined) {
                 inputElement.addEventListener('keyup', function (e) {
@@ -2263,18 +2172,6 @@ CommonJS.Input = {
                 });
             } else {
                 inputElement.keyup(function(e) {
-                    $(this).val(e.target.value.replace(/[가-힣ㄱ-ㅎㅏ-ㅣ]/gi, ''));
-                });
-            }
-        } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        this.value = e.target.value.replace(/[가-힣ㄱ-ㅎㅏ-ㅣ]/gi, '');
-                    }
-                });
-            } else {
-                $(document).on('keyup', inputElementStr, function (e) {
                     $(this).val(e.target.value.replace(/[가-힣ㄱ-ㅎㅏ-ㅣ]/gi, ''));
                 });
             }
@@ -2339,153 +2236,138 @@ CommonJS.Input = {
         }
     },
     /**
-     * 전화번호 하이픈(-) 자동입력
+     * 휴대폰 번호 하이픈(-) 자동입력
      * @param {Element} inputElement
-     * @param {(undefined|string)} inputElementStr
      * @example
      * [JavaScript]
-     * CommonJS.Input.formatHypenPhone( document.querySelector(셀렉터) );
-     * CommonJS.Input.formatHypenPhone( null, 아이디_셀렉터 );
+     * CommonJS.Input.formatCellPhoneNumber( document.querySelector(셀렉터) );
      *
      * [jQuery]
-     * CommonJS.Input.formatHypenPhone( $(셀렉터) );
-     * CommonJS.Input.formatHypenPhone( null, 셀렉터 );
+     * CommonJS.Input.formatCellPhoneNumber( $(셀렉터) );
      */
-    formatHypenPhone: function (inputElement, inputElementStr) {
-        if (inputElement !== null) {
-            if (inputElement.length === undefined) {
-                inputElement.addEventListener('keyup', function (e) {
-                    fnTemp(e, inputElement);
-                });
+    formatCellPhoneNumber: function (inputElement) {
+        if (inputElement.length === undefined) {
+            inputElement.addEventListener('keyup', function (e) {
+                const formattedPhoneNumber = CommonJS.FormatValue.formatCellPhoneNumber(e.target.value);
+                e.target.value = formattedPhoneNumber;
+            });
+        } else {
+            inputElement.keyup(function(e) {
+                const formattedPhoneNumber = CommonJS.FormatValue.formatCellPhoneNumber(e.target.value);
+                $(e.target).val(formattedPhoneNumber);
+            });
+        }
+    },
+    /**
+     * 전화번호 하이픈(-) 자동입력
+     * @param {Element} inputElement
+    * @example
+     * [JavaScript]
+     * CommonJS.Input.formatPhoneNumber( document.querySelector(셀렉터) );
+     *
+     * [jQuery]
+     * CommonJS.Input.formatPhoneNumber( $(셀렉터) );
+     */
+    formatPhoneNumber: function (inputElement) {
+        if (inputElement.length === undefined) {
+            inputElement.addEventListener('keyup', function (e) {
+                const formattedPhoneNumber = CommonJS.FormatValue.formatPhoneNumber(e.target.value);
+                e.target.value = formattedPhoneNumber;
+            });
+        } else {
+            inputElement.keyup(function(e) {
+                const formattedPhoneNumber = CommonJS.FormatValue.formatPhoneNumber(e.target.value);
+                $(e.target).val(formattedPhoneNumber);
+            });
+        }
+    }
+}
+
+CommonJS.FormatValue = {
+    /**
+     * 휴대폰 번호 하이픈(-) 자동입력
+     * @param {number} value
+     * @example
+     * [JavaScript]
+     * const inputElement = document.querySelector(셀렉터);
+     * inputElement.addEventListener('keyup', function(e) {
+     *      const formattedPhoneNumber = CommonJS.FormatValue.formatCellPhoneNumber(e.target.value);
+     *      e.target.value = formattedPhoneNumber;
+     * });
+     *
+     * [jQuery]
+     * const inputElement = $(셀렉터);
+     * inputElement.keyup(function(e) {
+     *      const formattedPhoneNumber = CommonJS.FormatValue.formatCellPhoneNumber(e.target.value);
+     *      $(e.target).val(formattedPhoneNumber);
+     * });
+     */
+    formatCellPhoneNumber: function (value) {
+        if (!value) return value;
+        const phoneNumber = value.replace(/[^\d]/g, '');
+        const phoneNumberLength = phoneNumber.length;
+        if (phoneNumberLength < 4) return phoneNumber;
+        if (phoneNumberLength < 8) {
+            return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3)}`;
+        }
+        return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
+    },
+    /**
+     * 전화번호 하이픈(-) 자동입력
+     * @param {number} value
+     * @returns
+     * @example
+     * [JavaScript]
+     * const inputElement = document.querySelector(셀렉터);
+     * inputElement.addEventListener('keyup', function(e) {
+     *      const formattedPhoneNumber = CommonJS.FormatValue.formatPhoneNumber(e.target.value);
+     *      e.target.value = formattedPhoneNumber;
+     * });
+     *
+     * [jQuery]
+     * const inputElement = $(셀렉터);
+     * inputElement.keyup(function(e) {
+     *      const formattedPhoneNumber = CommonJS.FormatValue.formatPhoneNumber(e.target.value);
+     *      $(e.target).val(formattedPhoneNumber);
+     * });
+     */
+    formatPhoneNumber: function (value) {
+        if (!value) return value;
+        const phoneNumber = value.replace(/[^\d]/g, '');
+        const phoneNumberLength = phoneNumber.length;
+
+        if (phoneNumber.startsWith('02')) {
+            if (phoneNumberLength > 2 && phoneNumberLength <= 6) {
+                return `${phoneNumber.slice(0, 2)}-${phoneNumber.slice(2)}`;
+            } else if (phoneNumberLength > 6 && phoneNumberLength <= 9) {
+                return `${phoneNumber.slice(0, 2)}-${phoneNumber.slice(2, 5)}-${phoneNumber.slice(5, 9)}`;
+            } else if (phoneNumberLength > 9) {
+                return `${phoneNumber.slice(0, 2)}-${phoneNumber.slice(2, 6)}-${phoneNumber.slice(6, 10)}`;
+            }
+        } else if (phoneNumber.startsWith('050') && phoneNumber.charAt(3) >= '2' && phoneNumber.charAt(3) <= '7') {
+            if (phoneNumberLength > 4 && phoneNumberLength <= 7) {
+                return `${phoneNumber.slice(0, 4)}-${phoneNumber.slice(4)}`;
             } else {
-                inputElement.keyup(function(e) {
-                    fnTemp(e, inputElement);
-                });
+                return `${phoneNumber.slice(0, 4)}-${phoneNumber.slice(4, 7)}-${phoneNumber.slice(7, 11)}`;
+            }
+        }  else if (phoneNumber.startsWith('070')) {
+            if (phoneNumberLength > 3 && phoneNumberLength <= 7) {
+                return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3)}`;
+            } else {
+                return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
             }
         } else {
-            if (document.querySelector(inputElementStr).length === undefined) {
-                let inputElement = document.querySelector(inputElementStr);
-
-                document.addEventListener('keyup', function (e) {
-                    if ( e.target && e.target.id === inputElementStr.replace('#', '') ) {
-                        fnTemp(e, inputElement);
-                    }
-                });
-            } else {
-                let inputElement = $(inputElementStr);
-
-                $(document).on('keyup', inputElementStr, function (e) {
-                    fnTemp(e, inputElement);
-                });
-            }
-        }
-
-        function fnTemp(e, inputElement) {
-            var _type;
-            if (inputElement.length === undefined) {
-                _type = 0;
-            } else {
-                _type = 1;
-            }
-
-            var _str;
-            if (_type === 0) {
-                _str = inputElement.value;
-            } else {
-                _str = inputElement.val();
-            }
-
-            _str = _str.replace(/[^0-9]/g, '');
-
-            var tmp = '';
-
-            if (_str.substring(0, 2) == 02) {
-                // 서울 전화번호일 경우 10자리까지만 나타나고 그 이상의 자리수는 자동삭제
-                if (_str.length < 3) {
-                    if (_type === 0) {
-                        inputElement.value = _str;
-                    } else {
-                        inputElement.val(_str);
-                    }
-                } else if (_str.length < 6) {
-                    tmp += _str.substr(0, 2);
-                    tmp += '-';
-                    tmp += _str.substr(2);
-
-                    if (_type === 0) {
-                        inputElement.value = tmp;
-                    } else {
-                        inputElement.val(tmp);
-                    }
-                } else if (_str.length < 10) {
-                    tmp += _str.substr(0, 2);
-                    tmp += '-';
-                    tmp += _str.substr(2, 3);
-                    tmp += '-';
-                    tmp += _str.substr(5);
-
-                    if (_type === 0) {
-                        inputElement.value = tmp;
-                    } else {
-                        inputElement.val(tmp);
-                    }
+            if (phoneNumberLength > 3 && phoneNumberLength <= 7) {
+                return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3)}`;
+            } else if (phoneNumberLength > 7 && phoneNumberLength <= 11) {
+                if (phoneNumberLength === 10) {
+                    return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
                 } else {
-                    tmp += _str.substr(0, 2);
-                    tmp += '-';
-                    tmp += _str.substr(2, 4);
-                    tmp += '-';
-
-                    if (_type === 0) {
-                        inputElement.value = tmp;
-                    } else {
-                        inputElement.val(tmp);
-                    }
-                }
-            } else {
-                // 핸드폰 및 다른 지역 전화번호 일 경우
-                if (_str.length < 4) {
-                    if (_type === 0) {
-                        inputElement.value = _str;
-                    } else {
-                        inputElement.val(_str);
-                    }
-                } else if (_str.length < 7) {
-                    tmp += _str.substr(0, 3);
-                    tmp += '-';
-                    tmp += _str.substr(3);
-
-                    if (_type === 0) {
-                        inputElement.value = tmp;
-                    } else {
-                        inputElement.val(tmp);
-                    }
-                } else if (_str.length < 11) {
-                    tmp += _str.substr(0, 3);
-                    tmp += '-';
-                    tmp += _str.substr(3, 3);
-                    tmp += '-';
-                    tmp += _str.substr(6);
-
-                    if (_type === 0) {
-                        inputElement.value = tmp;
-                    } else {
-                        inputElement.val(tmp);
-                    }
-                } else {
-                    tmp += _str.substr(0, 3);
-                    tmp += '-';
-                    tmp += _str.substr(3, 4);
-                    tmp += '-';
-                    tmp += _str.substr(7);
-
-                    if (_type === 0) {
-                        inputElement.value = tmp;
-                    } else {
-                        inputElement.val(tmp);
-                    }
+                    return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
                 }
             }
         }
+        return phoneNumber;
     }
 }
 
@@ -2826,6 +2708,20 @@ CommonJS.Mobile = {
         return 'intent://' + host + '/#Intent;package=' + package + ';scheme=' + scheme + ';end';
     },
     /**
+     * IOS 앱링크 or 딥링크 URL 생성
+     *   - URL 스킴 방식
+     *      1. info.plist 에 URL Types 항목 추가
+     *      2. Identifier와 URL Schemes에 적절한 값을 입력
+     * @param {string} host
+     * @param {string} scheme
+     * @returns
+     * @example
+     * CommonJS.Mobile.makeURLSchemeIOSAppLinkUrl('instagram.com', 'https');
+     */
+    makeURLSchemeIOSAppLinkUrl: function (host, scheme) {
+        return scheme + '://' + host;
+    },
+    /**
      * 앱링크 or 딥링크 실행
      * @param {string} androidUrl
      * @param {string} iosUrl
@@ -2837,7 +2733,6 @@ CommonJS.Mobile = {
      * [iOS]
      * CommonJS.Mobile.runAppLinkUrl('', 'instagram://media', 'https://itunes.apple.com/kr/app/instagram/id389801252?mt=8');
      *
-     * @description iOS는 구글링한 결과... 예전에 프로젝트때 누군가 해놓은거는 한 3초 설정해놓았던거 같은데... 1초도 상관 없는듯
      * @link https://gomest.tistory.com/7
      */
     runAppLinkUrl: function (androidUrl, iosUrl, iosAppStoreUrl) {
