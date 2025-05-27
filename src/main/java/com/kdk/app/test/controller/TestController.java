@@ -99,7 +99,7 @@ public class TestController {
 	public ModelAndView logout() {
 		ModelAndView mav = new ModelAndView();
 
-		ContextUtil.getInstance().removeAttrFromSession(SpringSessionUtil.LOGIN_SESSION_ID);
+		ContextUtil.Session.removeAttrFromSession(SpringSessionUtil.LOGIN_SESSION_ID);
 
 		mav.setViewName("redirect:/test/login");
 		return mav;
@@ -146,7 +146,7 @@ public class TestController {
 		byte[] byteFile = Files.readAllBytes(path);
 		InputStream is = new BufferedInputStream(new FileInputStream(file));
 
-		String sMimeType = FileMimeTypeUtil.getInstance().getFileMimeTypeTika(is);
+		String sMimeType = FileMimeTypeUtil.getFileMimeTypeTika(is);
 
 		if ( "view".equalsIgnoreCase(mode) ) {
 			return ResponseEntity.status(HttpStatus.OK)
