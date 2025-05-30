@@ -7,7 +7,6 @@
 <meta charset="UTF-8">
 <title>Insert title here</title>
 
-<jsp:include page="/WEB-INF/jsp/fragment/script.jsp" />
 </head>
 <body>
 
