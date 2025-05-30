@@ -1,0 +1,11 @@
+    @Bean
+    MessageSource messageSource() {
+		ReloadableResourceBundleMessageSource source = new ReloadableResourceBundleMessageSource();
+
+    	source.setBasename("classpath:/messages/message");
+		source.setDefaultEncoding(StandardCharsets.UTF_8.name());
+		source.setCacheSeconds(60);
+		source.setUseCodeAsDefaultMessage(true);
+
+		return source;
+	}

@@ -29,10 +29,8 @@ public class MessageConfig {
 
     @Bean
     MessageSource messageSource() {
-		//ReloadableResourceBundleMessageSource source = new ReloadableResourceBundleMessageSource();
     	YamlMessageSource source = new YamlMessageSource();
 
-    	//source.setBasename("classpath:/messages/message");
 		source.setBasename("messages/message");
 		source.setDefaultEncoding(StandardCharsets.UTF_8.name());
 		source.setCacheSeconds(60);
