@@ -31,13 +31,12 @@ public class CsrfTokenInterceptor implements HandlerInterceptor {
 		String csrfToken = (String) session.getAttribute(CommonConstants.CsrfToken.CSRF_TOKEN_SESSION_KEY);
 		String csrfTokenInParam = request.getParameter(CommonConstants.CsrfToken.CSRF_TOKEN_PARAM_KEY);
 
-		if ( csrfToken.equals(csrfTokenInParam) ) {
-			return true;
-		} else {
+		if ( csrfToken == null || csrfTokenInParam == null || !csrfToken.equals(csrfTokenInParam) ) {
 			response.sendError(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.name());
 			return false;
+		} else {
+			return true;
 		}
 	}
-
 
 }
